@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using CheckListApp.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace CheckListApp;
 
@@ -15,11 +17,22 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlite($"Data Source=checklistapp.db"));
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        var app = builder.Build();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            SeedData.Initialize(services);
+        }
+
+        return app;
     }
 }
 

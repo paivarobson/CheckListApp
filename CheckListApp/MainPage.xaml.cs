@@ -1,25 +1,32 @@
-﻿namespace CheckListApp;
+﻿using Microsoft.EntityFrameworkCore;
+using CheckListApp.Data;
 
-public partial class MainPage : ContentPage
+namespace CheckListApp
 {
-    int count = 0;
-
-    public MainPage()
+    public partial class MainPage : ContentPage
     {
-        InitializeComponent();
+        public readonly AppDbContext _dbContext;
+
+        public MainPage(AppDbContext dbContext)
+        {
+            InitializeComponent();
+            _dbContext = dbContext;
+            CarregarChecklist();
+        }
+
+        private void CarregarChecklist()
+        {
+            var itens = _dbContext.ChecklistItens.Include(ci => ci.Categoria).ToList();
+            var itensAgrupados = itens
+                .GroupBy(item => item.Categoria)
+                .Select(group => new
+                {
+                    Categoria = group.Key,
+                    Itens = group.ToList()
+                });
+
+            ChecklistCollectionView.ItemsSource = itensAgrupados;
+        }
     }
 
-    private void OnCounterClicked(object sender, EventArgs e)
-    {
-        count++;
-
-        if (count == 1)
-            CounterBtn.Text = $"Clicked {count} time";
-        else
-            CounterBtn.Text = $"Clicked {count} times";
-
-        SemanticScreenReader.Announce(CounterBtn.Text);
-    }
 }
-
-
